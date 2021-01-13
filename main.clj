@@ -408,3 +408,27 @@
   (change-value var1 var2 20)
   (println @var1 @var2))
 (concurrency-test)
+
+(defn test [[k v]]
+  [k (inc v)])
+(map test {:b 3 :a 4})
+
+(type 1111111111111111111111111111111111111111)
+(type (/ 1 2))
+
+(def t {:hello 1})
+(def s1 #{1 2 3})
+(s1 3)
+(s1 4)
+
+(def m1 {:age 10 :name {:firstname "John" :surname "Smith"}})
+(get m1 :name)
+(get-in m1 [:name :surname])
+(assoc m1 :height 50)
+;; update和assoc的区别在于update可以把原来的值作为生成新的值的一个参数，其实他也等同于你用get之后再用assoc，用下面的等式来表达
+;; (update m k f) = (assoc m k (f (get m k)))
+(update m1 :age (fn [x] (+ x 1)))
+
+(-> {:name {:fullname "Xiao Wang"} :from {:Country "China" :City "Beijing"}}
+    (assoc-in [:from :City] "Shanghai")
+    (update-in [:name :fullname] (fn [full-name] (clojure.string/split full-name #" "))))
