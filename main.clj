@@ -620,4 +620,95 @@ vehicles
 
 ;; ----------------------------
 ;; https://my.oschina.net/clopopo/blog/149922
+(defn multiple? [n div]
+  (= 0 (mod n div)))
+(multiple? 3 3)
+(multiple? 4 3)
+(doseq [i (range 0 101)]
+  (cond (and (multiple? i 3)
+             (multiple? i 5)) (println "FizzBuzz")
+        (multiple? i 3) (println "Fizz")
+        (multiple? i 5) (println "Buzz")
+        :else (println i)))
 
+;; for循环是另一种迭代的方式，但是接下来你会发现使用for循环不适合解决FizzBuzz问题。
+;; for循环的语法和doseq是一样的，只不过for 返回lazy seq（类似python 中的yield）
+;; 而doseq是side effect。这么说有点抽象，还是用例子来说明吧： 
+
+;; 我们原想返回0-10中所有的偶数，但是得到的结果是nil
+(doseq [x (range 0 11) :when (even? x)] x)
+
+;; 使用doseq只能返回nil，不够我们可以在遍历期间做其他事情。比如 打印
+(doseq [x (range 0 10) :when (even? x)] (println x ","))
+
+;; 我们使用for来获取0-10中所有的偶数
+(for [x (range 0 10) :when (even? x)] x)
+;; 可以这么说，使用doseq就向java中的for循环，只能在循环过程中做些什么事情，
+;; 而clojure中的for循环可以在每次的遍历中向外输出值，最终由这些值组成一个序列。
+
+;; 再用个例子体会一下 
+(for [x [0 1 2 3 4 5]
+      :let [y (* x 3)]
+      :when (even? y)] y)
+
+;; for循环不适合解决FizzBuzz问题的原因就在于，FizzBuzz只是在遍历过程中需要打印出对应的值，
+;; 而不需要每次都返回结果。有兴趣你可以把解决FizzBuzz代码中的doseq换成for来看看输出效果就明白了。
+(for [x (range 0 101)]
+  (cond (and (multiple? x 3)
+             (multiple? x 5)) (println "FizzBuzz")
+        (multiple? x 3) (println "Fizz")
+        (multiple? x 5) (println "Buzz")
+        :else (println x)))
+
+
+;; loop 在许多语言中都有这个关键字,基本上都是为了更好的使用迭代器而存在。但是在Clojure中，
+;; loop实际上是递归的，所以使用它需要更多一点的相关知识和代码。 
+(loop [data (range 0 101)]
+  (if (not (empty? data))
+    (let [x (first data)]
+      (cond (and (multiple? x 3)
+                 (multiple? x 5)) (println "FizzBuzz")
+            (multiple? x 3) (println "Fizz")
+            (multiple? x 5) (println "Buzz")
+            :else (println x))
+      (recur (rest data)))))
+;; 首先cond里面的逻辑和之前doseq的一模一样，这个是不变的。我们知道递归必须有一个结束条件，
+;; 所以我们在这里在递归开始加入了一个判断语句 (if (not (empty? data)) ,
+;; 就是判断data是否为空列表，如果为空递归结束，否则继续进行。每次递归，我们都从列表中取出一个值，
+;; 然后把它传递给cond那部分逻辑进行判断。cond逻辑结束后，为了能递归调用上面逻辑，我们使用recur来达到目的。
+;; 上例中，我们每次都将使用本次递归中的列表除第一个元素以外的剩下列表进行下一次递归。
+;; （递归必须是一个收敛的过程，否则递归将永远无法结束）
+;; 我们使用loop来打印0-11的偶数，对比之前的例子。主要体会如何使用递归思想来解决问题 :
+(loop [x 0]
+  (when (<= x 10)
+    (if (even? x) (println x))
+    (recur (+ x 1))))
+
+;; (建议大家可以看看《the little schemer》，看完肯定能更好的掌握递归思想，并且对学习clojure大有好处）
+
+;; 现在我们再来个稍微难点的例子，我们会递归迭代一组数字，然后搜集遍历过程中得到的前十个偶数。
+;; 注意这个例子和前面不同的是，我们每次递归 (recur)传入的参数是多个，而不是一个。
+;; recur后面参数其实是和loop的第一个向量参数中的绑定参数 (data、n、n-count、result)是一一对应的，大家仔细观察一下。
+(loop [data (range 1 101)
+       n (first data)
+       n-count 0
+       result nil] ;; result 初始为空列表
+  (if (and n (< n-count 10)) ;;递归结束条件
+    (if (even? n)
+    (recur (rest data) (first data) (inc n-count) (cons n result))
+    (recur (rest data) (first data) n-count result))
+    (reverse result))) ;;递归结束后，反转结果列表
+
+;; 我们可以做的更好一点，就是把上面定义成一个递归函数：
+(defn take-evens
+  ([x nums] (take-evens x nums 0 nil))
+  ([x nums n-count result]
+   (if (empty? nums) ;;递归结束条件一
+     (reverse result)
+     (if (< n-count 10) ;;递归结束条件二
+       (let [n (first nums)]
+         (if (even? n)
+           (recur x (rest nums) (inc n-count) (cons n result))
+           (recur x (rest nums) n-count result)))
+       (reverse result)))))
+(take-evens 10 (range 1 101))
