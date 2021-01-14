@@ -511,3 +511,113 @@
 ;; clojure-contrib is no longer being developed or maintained.
 ;; Rather than a single, monolithic, contributions library, 
 ;; Clojure now has a set of separate libraries for each unit of functionality
+(defn date-list
+  ([] (clojure.string/split (format-date) #"\W+"))
+  ([systime] (clojure.string/split (format-date systime) #"\W+")))
+(date-list)
+
+;; ----------------------------
+;; https://my.oschina.net/clopopo/blog/145319
+;; 不过，用下面这种方式，如果传入的键值对少于9个，它实际上创建的是ArrayMap而不是HashMap: 
+(class {:a 1 :b 2})
+(class {:a 1 :b 2 :c 3 :d 4 :e 5 :f 6 :g 7 :h 8 :i 9})
+;; 如果是map的键是关键字类型，关键字直接可以当做函数使用
+(def m {:key1 1 :key2 2})
+(:key1 m)
+;; map本身也可以用于取值，这种适应于任意类型的key
+(m :key1)
+;; 一种更好的方式是使用get函数，因为可以设置缺省值。 (get 也可以用于向量，把key变成索引值即可）
+(get m :key1)
+(get m :key3 "default")
+;; 我们可以使用get-in 获取嵌套map的值 
+(def m {:username "sally"
+        :profile {:name "Sally Clojurian"
+                  :address {:city "Austin" :state "TX"}}})
+(get-in m [:profile :name])
+(get-in m [:profile :address])
+(get-in m [:profile :address :city])
+;; 如果键不存在，可以设置默认值 
+(get-in m [:profile :address :zip-code] "no zip code!")
+;; 我敢说这是json好么！！！ (get-in 函数可不只是用于map，向量也可以使用get-in操作）
+
+;; 没则增加，有则修改 conj
+(conj {:name "qh" :age 20} {:age 30} {:gender 'male})
+;; 没则增加，有则修改 merge
+(merge {:name "qh" :age 20} {:age 30} {:gender 'male})
+;; assoc是操作map和对应的元素，上面两个操作的是多个map，注意区别
+(assoc {:name "qh" :age 20} :age 30 :gender 'male)
+;; 删除
+(dissoc {:name "qh" :age 20} :name)
+(def m {:name "qh" :age 30})
+(dissoc m :name)
+;; m没有改变
+(println m)
+
+;; sorted-map
+(def sm (sorted-map :c 1 :b 2 :f 3 :a 3))
+(println sm)
+;; 有序map增删改查操作和上面一样。 
+
+;; ----------------------------
+;; https://my.oschina.net/clopopo/blog/148993
+;;;; 事物型引用 (Transactional References)
+;; {{包装引用对象 
+;; 包装一个空的哈希表
+(ref (hash-map))
+;; 绑定一个Ref类型对象，该Ref包装了一个哈希表
+(def vehicles (ref {:trunk "Toyota" :car "Subaru" :plane "de Havilland"}))
+vehicles
+;; }}
+
+;; {{解引用对象 
+;; 接上面的例子，我们已经有了一个被包装在Ref类型之下的一个对象vehicles，
+;; 但有很多函数需要访问被包装的对象，而不是这个引用对象
+;; vehicles 不是一个map，所以会报错
+(vals vehicles)
+(map? vehicles)
+(class vehicles)
+;; 我们可以使用defref函数来获取封装在Ref内部的对象，当然还有一种更简洁的方式就是使用@符号：
+(deref vehicles)
+@vehicles
+(map? @vehicles)
+(keys @vehicles)
+;; }}
+
+;; {{修改引用对象
+;; 我们引用对象的目的，就是想修改它。之所以叫作事务型引用，
+;; 是因为我们必须在一个事务中去修改它。在事务中（例如dosync使用alter函数是最安全的修改方式，
+;; 它能确保我们在事务操作期间，其他对这个对象的改变都不会发生。 
+(dosync
+  (alter vehicles assoc :car "Volkswagon"))
+;; vehicles是真的被改变了，而不是返回一个新的对象
+@vehicles
+(dosync
+  (alter vehicles dissoc :car))
+@vehicles
+;; 如果你不关心引用对象原来的值的话，可以使用ref-set来设置一个新的值 
+(dosync
+  (ref-set vehicles {:motorcycle "Ducati"}))
+;; }}
+
+;;;; 原子类型 (Atoms)
+;; 和引用类型(Ref)类似，原子也是创建一个管卡来修改一个不可变对象，
+;; 并且原子也能和Ref一样进行同步更新。但是原子并不要求在事务中运行，
+;; 并且它们不能协调多个状态的更新。（多个Ref类型对象可以在一个事务中协调更新，
+;; 要么同时成功，要么同时失败，即回滚） 
+(def vehicles (atom ["Toyota Tacoma" "Subaru Outback" "de Havilland Beaver"]))
+vehicles
+(class vehicles)
+(deref vehicles)
+@vehicles
+;; {{修改原子对象
+;; 我们可以使用swap！函数或者reset！函数（名字后面有感叹号在lisp方言中代表修改函数之意）
+;; 来修改被原子包装的对象。swap！用于在原来值的基础上进行修改，reset！则是直接用新值替换原来的值。 
+(swap! vehicles conj "Ducati Diavel")
+@vehicles
+(reset! vehicles (take 2 @vehicles))
+@vehicles
+;; }}
+
+;; ----------------------------
+;; https://my.oschina.net/clopopo/blog/149922
+
