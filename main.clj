@@ -506,4 +506,8 @@
 
 ;; ----------------------------
 ;; https://my.oschina.net/clopopo/blog/143294
-(use 'clojure.contrib.str-utils)
+;; https://clojure.github.io/clojure-contrib/str-utils-api.html
+;; clojure-contrib is now deprecated
+;; clojure-contrib is no longer being developed or maintained.
+;; Rather than a single, monolithic, contributions library, 
+;; Clojure now has a set of separate libraries for each unit of functionality
