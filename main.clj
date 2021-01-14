@@ -429,6 +429,81 @@
 ;; (update m k f) = (assoc m k (f (get m k)))
 (update m1 :age (fn [x] (+ x 1)))
 
+;; -> 将第一个参数当成后面的参数（函数）的第一个参数
 (-> {:name {:fullname "Xiao Wang"} :from {:Country "China" :City "Beijing"}}
     (assoc-in [:from :City] "Shanghai")
     (update-in [:name :fullname] (fn [full-name] (clojure.string/split full-name #" "))))
+
+;; ----------------------------
+;; https://my.oschina.net/clopopo/blog/142589
+(def alphabet "abcdefghijklmnopqrstuvwxyz")
+(def alphabet-length (fn [] (count alphabet)))
+(def alphabet-length2 #(count alphabet))
+(defn select-random
+  "从一个列表中随机返回一个元素"
+  {:added "1.2"} ;; 元数据metadata
+  [options]
+  (nth options (rand-int (count options))))
+(select-random (list "growl" "lick" "jump"))
+
+(defn greeting
+  "Composes a greeting sentence. Expects both the name of a greeter
+  and the name of whom is to be greeted for arguments. An approach
+  and an action are randomly selected."
+  {:added "1.2"}
+  [greeter whom]
+  (str greeter " greeted " whom " with a "
+       (select-random (list "ferocious" "wimpy" "precarious" "subtle")) " "
+       (select-random (list "growl" "lick" "jump")) "!"))
+(greeting "John" "Thaddeus")
+
+;; ----------------------------
+;; https://my.oschina.net/clopopo/blog/142705
+(defn add [v1 v2 & others]
+  (+ v1 v2
+     (if others
+       (reduce + 0 others)
+       0)))
+(add 1 2)
+(add 1 2 3)
+
+;; ----------------------------
+;; https://my.oschina.net/clopopo/blog/142982
+(meta #'select-random)
+(def approaches
+  (with-meta
+    (list "ferocious" "wimpy" "precarious")
+    {:creator "tim"}))
+(meta approaches)
+
+;; ----------------------------
+;; https://my.oschina.net/clopopo/blog/143000
+(defn msec []
+  (System/currentTimeMillis)) ;;这里的斜线相当于java中的 "."
+(msec)
+;; 上面是静态方法调用的展示，下面再来看看如果调用实例方法。让我们创建两个java.util.Date对象。
+;; 注意，之前我们使用的都是java.lang下面的类，所以不需要手动导入。非lang包下的必须手动导入（和java一样一样的）。 
+(import java.util.Date)  ;;手动导入Date (语法都和java一样）
+(Date.) ;;创建Date对象 
+(class (Date.))
+(defn date
+  ([] (Date.))
+  ([systime] (Date. systime)))
+(date)
+(date 1307328017335)
+
+(import java.text.SimpleDateFormat)
+(defn format-date
+  ([] (format-date (date) "yyyy MM dd HH mm ss"))
+  ([x] (if (string? x)
+         (format-date (date) x)
+         (format-date x "yyyy MM dd HH mm ss")))
+  ([dt fmt] (.format (SimpleDateFormat. fmt) dt)))
+(format-date)
+(format-date (date 404534000000))
+(format-date "yyyy/MM/dd HH:mm:ss")
+(format-date (date 404534000000) "yyyy/MM/dd HH:mm:ss")
+
+;; ----------------------------
+;; https://my.oschina.net/clopopo/blog/143294
+(use 'clojure.contrib.str-utils)
