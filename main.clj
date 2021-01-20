@@ -712,3 +712,106 @@ vehicles
            (recur x (rest nums) n-count result)))
        (reverse result)))))
 (take-evens 10 (range 1 101))
+
+;; {{my-test
+(defn recursive-reverse [coll]
+  (loop [coll coll
+         result nil]
+    (if (empty? coll)
+      result
+      (recur (rest coll) (conj result (first coll))))))
+(recursive-reverse [1 2 3 4 5])
+
+(defn factorial [n]
+    (if (= n 1)
+      (* 1 1)
+      (* n (factorial (dec n)))))
+(factorial 100003N)  ;; StackOverflowError
+
+;; http://praneett.blogspot.com/2014/06/clojure-koans-answers-and-explanations_4.html
+(defn factorial2 [n]
+  (loop [n n
+         result 1]
+    (if (= n 0)
+      result
+      (recur (dec n) (* n result)))))
+(factorial2 100003N) ;; OK
+;; }}
+
+;; ----------------------------
+;; High order function (HOF)
+;; http://mokagio.github.io/tech-journal/2014/12/18/clojure-higher-order-functions.html
+;; https://christophermaier.name/2011/07/07/writing-elegant-clojure-code-using-higher-order-functions/
+(map inc [1 2 3 4 5])
+(map #(* 5 %) [1 2 3 4 5])
+
+
+;; ----------------------------
+;; https://clojuredocs.org/clojure.core/defmulti
+;this example illustrates that the dispatch type
+;does not have to be a symbol, but can be anything (in this case, it's a string)
+(defmulti greeting (fn [x] (get x "language")))
+;params is not used, so we could have used [_]]
+(defmethod greeting "English" [params] "Hello!")
+(defmethod greeting "French" [params] "Bonjour!")
+;;default handling
+(defmethod greeting :default [params]
+  (throw (IllegalArgumentException.
+           (str "I don't know the " (get params "language") " language"))))
+
+;then can use this like this:
+(def english-map {"id" "1", "language" "English"})
+(def french-map  {"id" "2", "language" "French"})
+(def spanish-map {"id" "3", "language" "Spanish"})
+
+(greeting english-map)
+(greeting french-map)
+(greeting spanish-map)
+
+;; https://www.bookstack.cn/read/clojure-learning-notes/getting-started-polymorphism.md
+(defmulti area :Shape)
+(defn rect [wd ht] {:Shape :Rect :wd wd :ht ht})
+(defn circle [radius] {:Shape :Circle :radius radius})
+(defmethod area :Rect [r]
+  (* (:wd r) (:ht r)))
+(defmethod area :Circle [c]
+  (* (. Math PI) (* (:radius c) (:radius c))))
+(defmethod area :default [x] :oops)
+(def r (rect 4 13))
+(def c (circle 12))
+
+(area r)
+(area c)
+(area {})
+
+;; {{https://clojuredocs.org/clojure.core/deftype#example-572bd5cee4b050526f331422
+;; define a couple of shape types
+(deftype Circle [radius])
+(deftype Square [lenght width])
+
+;; multimethod to calculate the area of a shape
+(defmulti area class)
+(defmethod area Circle [c]
+  (* Math/PI (* (.radius c) (.radius c))))
+(defmethod area Square [s]
+  (* (.lenght s) (.width s)))
+
+;; create a couple shapes and get their area
+(def myCircle (Circle. 10))
+(def mySquare (Square. 5 11))
+(area myCircle)
+(area mySquare)
+;; }}
+
+(-> {} (assoc :a 1) (assoc :b 2) (assoc :c {:d 3}) (get-in [:c :d]))
+
+;; {{my-test
+(let [[first-name last-name & aliases]
+      (list "Rich" "Hickey" "The Clojurer" "Go Time" "Lambda Guru")]
+  (str first-name " " last-name (apply str (map #(str " aka " %) aliases))))
+
+(let [[first-name last-name :as full-name] ["Rich" "Hickey"]]
+  (println first-name)
+  (println last-name)
+  (println full-name))
+;; }}
