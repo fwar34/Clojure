@@ -60,7 +60,7 @@ public class Application {
         Application app = new Application();
         Connection myconn = app.getConn();
         app.queryUpdate(myconn, "create table people (id SERIAL primary key, name varchar(20), gender varchar(10))");
-        app.queryUpdate(myconn, "insert into people(name,gender) values('smoon', 'man'");
+        app.queryUpdate(myconn, "insert into people(name,gender) values('smoon', 'man')");
         ResultSet rst = app.query(myconn, "select * from people");
         while (rst.next()) {
             int id = rst.getInt("id");
@@ -68,6 +68,7 @@ public class Application {
             String gender = rst.getString("gender");
             System.out.println("id: " + id + " name: " + name + " gender: " + gender);
         }
+        app.queryUpdate(myconn, "drop table people");
         myconn.close();
     }
 }

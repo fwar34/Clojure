@@ -20,7 +20,7 @@
   (jdbc/execute! ds ["drop table address"]))
 
 (defn insert-address [ds]
-  (jdbc/execute! ds ["insert into addresss(name,email)
+  (jdbc/execute! ds ["insert into address(name,email)
                      values('Lei','Lei@hello.com')"]))
 
 (defn list-address [ds]

@@ -6,8 +6,8 @@
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [seancorfield/next.jdbc "1.1.613"]
                  [org.postgresql/postgresql "42.2.18"]]
-  :main ^:skip-aot core
-  ; :main myapp.Application
+  ; :main ^:skip-aot core
+  :main myapp.Application
   :source-paths ["src/main/clojure"]
   :java-source-paths ["src/main/java"]
   :target-path "target/%s"
