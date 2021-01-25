@@ -34,7 +34,17 @@
     (println (list-address conn))
     (drop-table-address conn)))
 
+(defn demo-transaction [ds]
+  (jdbc/with-transaction [conn (jdbc/get-connection ds)]
+    (create-table-address conn)
+    (insert-address conn)
+    (insert-address conn)
+    (doseq [address (list-address conn)]
+      (println address))
+    (drop-table-address conn)))
+
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (demo-connection ds))
+  (demo-connection ds)
+  (demo-transaction ds))
